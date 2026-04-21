@@ -5,17 +5,19 @@
  * and scroll-synced DNA animation.
  */
 
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, FlaskConical, Microscope, Users, BookOpen, Atom, Dna, Pill, Activity, Star } from 'lucide-react';
+import { ArrowRight, FlaskConical, Microscope, Users, BookOpen, Atom, Dna, Pill, Activity, Star, Calendar, MapPin, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { SectionHeading } from '@/components/ui/section-heading';
 import { NanoParticle } from '@/components/3d/NanoParticle';
 import { DNA3D } from '@/components/3d/DNA3D';
 import Navigation from '@/components/layout/Navigation';
 import Footer from '@/components/layout/Footer';
+import { EventItem, getEvents } from '@/lib/admin-content';
 
 const researchAreas = [
   {
@@ -74,6 +76,15 @@ const testimonials = [
 export default function HomePage() {
   const { scrollYProgress } = useScroll();
   const dnaOpacity = useTransform(scrollYProgress, [0, 0.3], [0.6, 0]);
+  const [events, setEvents] = useState<EventItem[]>([]);
+
+  useEffect(() => {
+    const upcomingEvents = getEvents().filter(event => {
+      const eventDate = new Date(event.date);
+      return eventDate >= new Date();
+    }).slice(0, 3); // Get only 3 upcoming events
+    setEvents(upcomingEvents);
+  }, []);
 
   return (
     <div className="min-h-screen overflow-x-hidden">
@@ -201,6 +212,96 @@ export default function HomePage() {
               ))}
             </div>
           </motion.div>
+        </div>
+      </section>
+
+      {/* Events Section */}
+      <section className="relative z-10 section-padding bg-muted/30">
+        <div className="container-wide px-4 sm:px-6">
+          <SectionHeading
+            badge="Upcoming Events"
+            title="Join Our Events"
+            description="Participate in our seminars, workshops, and research showcases designed to foster collaboration and knowledge sharing."
+          />
+
+          {events.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mt-8 sm:mt-12">
+              {events.map((event, index) => (
+                <motion.div
+                  key={event.id || event.title}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true, margin: '-50px' }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                >
+                  <Card className="h-full hover:shadow-lg transition-shadow duration-300 overflow-hidden group">
+                    <CardHeader className="pb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge variant="outline" className="text-xs">{event.category}</Badge>
+                        <span className="inline-flex items-center gap-1.5 px-2 py-1 rounded-full text-xs font-medium text-white bg-blue-500">
+                          <span className="w-1.5 h-1.5 rounded-full bg-white" />
+                          Coming Soon
+                        </span>
+                      </div>
+                      <CardTitle className="text-xl group-hover:text-primary transition-colors">{event.title}</CardTitle>
+                      <CardDescription className="line-clamp-2">{event.description}</CardDescription>
+                    </CardHeader>
+
+                    <CardContent className="space-y-3">
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Calendar className="w-4 h-4 text-primary" />
+                        <span>{new Date(event.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Clock className="w-4 h-4 text-primary" />
+                        <span>{event.time}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <MapPin className="w-4 h-4 text-primary" />
+                        <span>{event.location}</span>
+                      </div>
+                      <Button className="w-full mt-4 group/btn" variant="outline">
+                        Learn More
+                        <ArrowRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform" />
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5 }}
+              className="text-center py-12"
+            >
+              <p className="text-muted-foreground mb-6">No upcoming events scheduled at the moment.</p>
+              <Button variant="nano" size="lg" asChild>
+                <Link to="/event">
+                  View All Events
+                  <ArrowRight className="w-5 h-5" />
+                </Link>
+              </Button>
+            </motion.div>
+          )}
+
+          {events.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              className="text-center mt-8 sm:mt-12"
+            >
+              <Button variant="nano-outline" size="lg" className="w-full sm:w-auto" asChild>
+                <Link to="/event">
+                  View All Events
+                  <ArrowRight className="w-5 h-5" />
+                </Link>
+              </Button>
+            </motion.div>
+          )}
         </div>
       </section>
 
